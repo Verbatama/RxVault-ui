@@ -5,8 +5,8 @@
 
       <nav>
         <ul class="nav-list">
-          <li>Profile</li>
-          <li>Logout</li>
+          <li><button type="button">Profile</button></li>
+          <li><button type="button">Logout</button></li>
         </ul>
       </nav>
     </div>
@@ -17,8 +17,8 @@
 
 .header {
   --header-height: 64px;
-  background-color:#4CAF50;
-  color: white;
+  background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+  color: #fff;
   position: fixed;
   top: 0;
   left: 0;
@@ -30,7 +30,8 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  border: 1px solid #ddd;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 24px rgba(24, 39, 28, 0.24);
 }
 
 .container {
@@ -41,7 +42,8 @@
 }
 
 .logo {
-  font-size: 20px;
+  font-size: 22px;
+  letter-spacing: 0.4px;
   margin: 0;
 }
 
@@ -54,13 +56,20 @@
 }
 
 .nav-list li {
-  cursor: pointer;
-  opacity: 0.8;
-  transition: 0.2s;
+  list-style: none;
 }
 
-.nav-list li:hover {
-  opacity: 1;
+.nav-list button {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.nav-list button:hover {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 @media (max-width: 900px) {
@@ -70,5 +79,4 @@
 }
 </style>
 
-<script setup>
-</script>
+<script setup></script>
