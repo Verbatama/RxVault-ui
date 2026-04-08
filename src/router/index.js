@@ -7,7 +7,7 @@ import MasterGolonganView from "../views/MasterGolonganView.vue";
 import DispensingView from "../views/DispensingView.vue";
 import StokKeluarView from "../views/StokKeluarView.vue";
 import TransferStokView from "../views/TransferStokView.vue";
-import RekapView from "../views/RekapView.js";
+import RekapView from "../views/RekapView.vue";
 import StockLogView from "../views/StockLogView.vue";
 import ReportsView from "../views/ReportsView.vue";
 

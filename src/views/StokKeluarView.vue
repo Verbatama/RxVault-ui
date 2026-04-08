@@ -4,7 +4,7 @@
 
     <div class="form-grid">
       <input v-model="noRegistrasi" placeholder="Nomor Registrasi" />
-      <select v-model.number="apotekerId">
+      <select v-model="apotekerId">
         <option :value="null" disabled>Pilih Apoteker</option>
         <option v-for="a in apotekers" :key="a.id" :value="a.id">{{ a.nama_apoteker }}</option>
       </select>
@@ -26,7 +26,22 @@
       </thead>
       <tbody>
         <tr v-for="d in details" :key="d.detail_resep_id">
-          <td>{{ d.nama_obat }}</td>
+        <td>{{ d.nama_obat }}</td>
+          <td>
+            <select
+              v-model="selectedProdukObatIdByDetail[d.detail_resep_id]"
+              :disabled="d.is_stok_keluar || getRekapOptionsForDetail(d).length === 0"
+            >
+              <option :value="null" disabled>{{ getSelectPlaceholderLabel(d) }}</option>
+              <option
+                v-for="opt in getRekapOptionsForDetail(d)"
+                :key="opt.produk_obat_id"
+                :value="opt.produk_obat_id"
+              >
+                {{ formatRekapOption(opt) }}
+              </option>
+            </select>
+          </td>
           <td>{{ d.jumlah_resep }}</td>
           <td>{{ d.status_dispensing }}</td>
           <td>{{ d.is_stok_keluar ? 'Sudah' : 'Belum' }}</td>
@@ -37,14 +52,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
-const noRegistrasi = ref(route.query.no_registrasi || "");
-const apotekerId = ref(route.query.apoteker_id ? Number(route.query.apoteker_id) : null);
+
+const asSingleString = (value) => {
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+  return value ?? "";
+};
+
+const asOptionalNumber = (value) => {
+  const s = asSingleString(value);
+  if (s === "" || s == null) {
+    return null;
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+};
+
+const noRegistrasi = ref(asSingleString(route.query.no_registrasi));
+const apotekerId = ref(asOptionalNumber(route.query.apoteker_id));
 const apotekers = ref([]);
 const details = ref([]);
+const stokRekap = ref([]);
+const selectedProdukObatIdByDetail = reactive({});
 const message = ref("");
 const error = ref("");
 
@@ -65,6 +99,59 @@ const fetchApotekers = async () => {
   }
 };
 
+const fetchRekapStokApotek = async () => {
+  try {
+    const res = await fetch("/api/stok/rekap");
+    const data = await res.json();
+    if (!res.ok || data.success === false) {
+      stokRekap.value = [];
+      return;
+    }
+    stokRekap.value = Array.isArray(data.data) ? data.data : [];
+  } catch (err) {
+    stokRekap.value = [];
+  }
+};
+
+const getRekapOptionsForDetail = (detail) => {
+  const obatId = Number(detail?.obat_id);
+  return (stokRekap.value || [])
+    .filter((item) => Number(item?.obat_id) === obatId)
+    .filter((item) => Number(item?.stok_apotek || 0) > 0);
+};
+
+const formatRekapOption = (opt) => {
+  const nama = opt?.nama_obat || "-";
+  const dosis = opt?.dosis ? `${opt.dosis} ${opt?.satuan_dosis || ""}`.trim() : "";
+  const bentuk = opt?.nama_bentuk_obat ? `(${opt.nama_bentuk_obat})` : "";
+  const stok = `stok: ${Number(opt?.stok_apotek || 0)}`;
+  return [nama, dosis, bentuk].filter(Boolean).join(" ") + ` | ${stok}`;
+};
+
+const getSelectPlaceholderLabel = (detail) => {
+  const nama = detail?.nama_obat || "Obat";
+  const optionsCount = getRekapOptionsForDetail(detail).length;
+  if (optionsCount === 0) {
+    return `${nama} - stok apotek kosong`;
+  }
+  return `${nama} - pilih obat`;
+};
+
+const syncDefaultSelections = () => {
+  for (const d of details.value || []) {
+    const key = d.detail_resep_id;
+    const options = getRekapOptionsForDetail(d);
+    const current = selectedProdukObatIdByDetail[key];
+    const stillValid = options.some((o) => Number(o.produk_obat_id) === Number(current));
+
+    if (stillValid) {
+      continue;
+    }
+
+    selectedProdukObatIdByDetail[key] = options.length > 0 ? Number(options[0].produk_obat_id) : null;
+  }
+};
+
 const fetchByNoReg = async () => {
   try {
     error.value = "";
@@ -73,6 +160,9 @@ const fetchByNoReg = async () => {
       details.value = [];
       return;
     }
+
+    await fetchRekapStokApotek();
+
     const res = await fetch(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`);
     const data = await res.json();
     if (!res.ok || data.success === false) {
@@ -81,6 +171,7 @@ const fetchByNoReg = async () => {
       return;
     }
     details.value = data?.data?.details || [];
+    syncDefaultSelections();
   } catch (err) {
     error.value = "Terjadi kesalahan saat mengambil data";
     details.value = [];
@@ -92,9 +183,45 @@ const processStokKeluar = async () => {
     error.value = "";
     message.value = "";
 
+    if (!noRegistrasi.value) {
+      error.value = "Nomor registrasi wajib diisi";
+      return;
+    }
+    if (!apotekerId.value) {
+      error.value = "Apoteker wajib dipilih";
+      return;
+    }
+
+    const items = [];
+    const missing = [];
+    for (const d of details.value || []) {
+      if (d.is_stok_keluar) {
+        continue;
+      }
+      const status = String(d.status_dispensing || "").toLowerCase();
+      if (status !== "sudah" && status !== "pending") {
+        continue;
+      }
+      const selected = selectedProdukObatIdByDetail[d.detail_resep_id];
+      if (!selected) {
+        missing.push(d.nama_obat || `detail ${d.detail_resep_id}`);
+        continue;
+      }
+      items.push({
+        detail_resep_id: Number(d.detail_resep_id),
+        produk_obat_id: Number(selected),
+      });
+    }
+
+    if (missing.length > 0) {
+      error.value = `Pilih obat dari stok apotek untuk: ${missing.join(", ")}`;
+      return;
+    }
+
     const payload = {
       no_registrasi: noRegistrasi.value,
       apoteker_id: Number(apotekerId.value),
+      items,
     };
 
     const res = await fetch("/api/stok-keluar/by-no-reg", {
@@ -123,6 +250,7 @@ const processStokKeluar = async () => {
 
 onMounted(async () => {
   await fetchApotekers();
+  await fetchRekapStokApotek();
   await fetchByNoReg();
 });
 </script>

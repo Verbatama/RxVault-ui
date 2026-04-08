@@ -16,7 +16,7 @@
       <h3>Antrian Dispensing</h3>
       <div class="queue-actions">
         <input v-model="queueSearch" placeholder="Cari no reg / nama pasien" />
-        <button type="button" @click="fetchQueue">Refresh Queue</button>
+        <button type="button" @click="fetchQueue">Refresh</button>
       </div>
       <table v-if="queueRows.length > 0" class="table queue-table">
         <thead>

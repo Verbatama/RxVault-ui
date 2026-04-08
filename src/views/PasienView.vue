@@ -173,21 +173,7 @@ const getLatestStatus = (detail) => {
 
       <h3>Resep Obat</h3>
 
-    <!-- Tombol update massal -->
-        <div class="bulk-action">
-          <button
-            type="button"
-            @click="updateAllStatus"
-            :disabled="
-              updatingAll ||
-              !(pasien?.reseps || []).some((r) =>
-                (r.detailReseps || []).some((d) => d.selectedStatus)
-              )
-            "
-          >
-            {{ updatingAll ? "Memproses..." : "Update semua status" }}
-          </button>
-        </div>
+   
 
         <table class="table">
       <thead>

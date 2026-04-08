@@ -164,6 +164,7 @@ onMounted(fetchRekapOptions);
 }
 
 .transfer-fields input,
+.transfer-fields select,
 .transfer-fields button {
   width: 100%;
   padding: 10px 12px;
@@ -171,6 +172,23 @@ onMounted(fetchRekapOptions);
   border-radius: 6px;
   font-size: 1rem;
   background: #f9fafb;
+}
+
+.transfer-fields button {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.transfer-fields button:first-of-type {
+  background: #2f855a;
+  border-color: #2f855a;
+  color: #ffffff;
+}
+
+.transfer-fields button:last-of-type {
+  background: #e5e7eb;
+  border-color: #cbd5e1;
+  color: #1f2937;
 }
 
 .summary-box {
