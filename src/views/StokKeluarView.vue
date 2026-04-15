@@ -4,10 +4,7 @@
 
     <div class="form-grid">
       <input v-model="noRegistrasi" placeholder="Nomor Registrasi" />
-      <select v-model="apotekerId">
-        <option :value="null" disabled>Pilih Apoteker</option>
-        <option v-for="a in apotekers" :key="a.id" :value="a.id">{{ a.nama_apoteker }}</option>
-      </select>
+      
       <button type="button" @click="fetchByNoReg">Refresh Data</button>
       <button type="button" @click="processStokKeluar">Proses Stok Keluar</button>
     </div>
@@ -19,6 +16,7 @@
       <thead>
         <tr>
           <th>Obat</th>
+          <th>Pilih Produk Obat</th>
           <th>Jumlah Resep</th>
           <th>Status Dispensing</th>
           <th>Stok Keluar</th>
@@ -54,6 +52,7 @@
 <script setup>
 import { ref, onMounted, reactive } from "vue";
 import { useRoute } from "vue-router";
+import { getApotekerAuthHeader, getApotekerSession } from "../utils/apotekerAuth";
 
 const route = useRoute();
 
@@ -64,18 +63,8 @@ const asSingleString = (value) => {
   return value ?? "";
 };
 
-const asOptionalNumber = (value) => {
-  const s = asSingleString(value);
-  if (s === "" || s == null) {
-    return null;
-  }
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-};
-
 const noRegistrasi = ref(asSingleString(route.query.no_registrasi));
-const apotekerId = ref(asOptionalNumber(route.query.apoteker_id));
-const apotekers = ref([]);
+const apotekerName = ref(getApotekerSession()?.apoteker?.nama_apoteker || "-");
 const details = ref([]);
 const stokRekap = ref([]);
 const selectedProdukObatIdByDetail = reactive({});
@@ -89,19 +78,13 @@ const createIdempotencyKey = () => {
   return `idem-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
-const fetchApotekers = async () => {
-  try {
-    const res = await fetch("/api/apoteker");
-    const data = await res.json();
-    apotekers.value = data.data || [];
-  } catch (err) {
-    apotekers.value = [];
-  }
-};
-
 const fetchRekapStokApotek = async () => {
   try {
-    const res = await fetch("/api/stok/rekap");
+    const res = await fetch("/api/stok/rekap", {
+      headers: {
+        ...getApotekerAuthHeader(),
+      },
+    });
     const data = await res.json();
     if (!res.ok || data.success === false) {
       stokRekap.value = [];
@@ -163,7 +146,11 @@ const fetchByNoReg = async () => {
 
     await fetchRekapStokApotek();
 
-    const res = await fetch(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`);
+    const res = await fetch(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`, {
+      headers: {
+        ...getApotekerAuthHeader(),
+      },
+    });
     const data = await res.json();
     if (!res.ok || data.success === false) {
       error.value = data.message || "Data tidak ditemukan";
@@ -187,11 +174,6 @@ const processStokKeluar = async () => {
       error.value = "Nomor registrasi wajib diisi";
       return;
     }
-    if (!apotekerId.value) {
-      error.value = "Apoteker wajib dipilih";
-      return;
-    }
-
     const items = [];
     const missing = [];
     for (const d of details.value || []) {
@@ -220,7 +202,6 @@ const processStokKeluar = async () => {
 
     const payload = {
       no_registrasi: noRegistrasi.value,
-      apoteker_id: Number(apotekerId.value),
       items,
     };
 
@@ -229,6 +210,7 @@ const processStokKeluar = async () => {
       headers: {
         "Content-Type": "application/json",
         "x-idempotency-key": createIdempotencyKey(),
+        ...getApotekerAuthHeader(),
       },
       body: JSON.stringify(payload),
     });
@@ -249,7 +231,6 @@ const processStokKeluar = async () => {
 };
 
 onMounted(async () => {
-  await fetchApotekers();
   await fetchRekapStokApotek();
   await fetchByNoReg();
 });

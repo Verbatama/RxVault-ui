@@ -1,13 +1,10 @@
 <template>
   <div class="dispensing-view">
-    <h2>Dispensing by Nomor Registrasi</h2>
+    <h2>Dispensing </h2>
 
     <div class="form-grid">
       <input v-model="noRegistrasi" placeholder="Nomor Registrasi (contoh: REG-001)" />
-      <select v-model.number="apotekerId">
-        <option :value="null" disabled>Pilih Apoteker</option>
-        <option v-for="a in apotekers" :key="a.id" :value="a.id">{{ a.nama_apoteker }}</option>
-      </select>
+      <!-- <input :value="apotekerName" readonly /> -->
       <button type="button" @click="fetchByNoReg">Cari</button>
       <button type="button" @click="processDispensing">Proses Dispensing</button>
     </div>
@@ -89,11 +86,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { getApotekerAuthHeader, getApotekerSession } from "../utils/apotekerAuth";
 
 const router = useRouter();
 const noRegistrasi = ref("");
-const apotekerId = ref(null);
-const apotekers = ref([]);
+const apotekerName = ref(getApotekerSession()?.apoteker?.nama_apoteker || "-");
 const pasienData = ref(null);
 const details = ref([]);
 const message = ref("");
@@ -108,21 +105,15 @@ const createIdempotencyKey = () => {
   return `idem-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
-const fetchApotekers = async () => {
-  try {
-    const res = await fetch("/api/apoteker");
-    const data = await res.json();
-    apotekers.value = data.data || [];
-  } catch (err) {
-    apotekers.value = [];
-  }
-};
-
 const fetchByNoReg = async () => {
   try {
     error.value = "";
     message.value = "";
-    const res = await fetch(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`);
+    const res = await fetch(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`, {
+      headers: {
+        ...getApotekerAuthHeader(),
+      },
+    });
     const data = await res.json();
 
     if (!res.ok || data.success === false) {
@@ -146,9 +137,13 @@ const processDispensing = async () => {
     error.value = "";
     message.value = "";
 
+    if (!noRegistrasi.value) {
+      error.value = "Nomor registrasi wajib diisi";
+      return;
+    }
+
     const payload = {
       no_registrasi: noRegistrasi.value,
-      apoteker_id: Number(apotekerId.value),
     };
 
     const res = await fetch("/api/dispensing/process-by-no-reg", {
@@ -156,6 +151,7 @@ const processDispensing = async () => {
       headers: {
         "Content-Type": "application/json",
         "x-idempotency-key": createIdempotencyKey(),
+        ...getApotekerAuthHeader(),
       },
       body: JSON.stringify(payload),
     });
@@ -177,7 +173,11 @@ const processDispensing = async () => {
 const fetchQueue = async () => {
   try {
     const query = queueSearch.value ? `?q=${encodeURIComponent(queueSearch.value)}` : "";
-    const res = await fetch(`/api/dispensing/queue${query}`);
+    const res = await fetch(`/api/dispensing/queue${query}`, {
+      headers: {
+        ...getApotekerAuthHeader(),
+      },
+    });
     const data = await res.json();
     queueRows.value = data.data || [];
   } catch (err) {
@@ -195,13 +195,11 @@ const goToStokKeluar = () => {
     path: "/stok-keluar",
     query: {
       no_registrasi: noRegistrasi.value,
-      apoteker_id: apotekerId.value || "",
     },
   });
 };
 
 onMounted(async () => {
-  await fetchApotekers();
   await fetchQueue();
 });
 </script>

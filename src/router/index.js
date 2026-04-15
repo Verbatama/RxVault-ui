@@ -10,9 +10,17 @@ import TransferStokView from "../views/TransferStokView.vue";
 import RekapView from "../views/RekapView.vue";
 import StockLogView from "../views/StockLogView.vue";
 import ReportsView from "../views/ReportsView.vue";
+import LoginApotekerView from "../views/LoginApotekerView.vue";
+import { isApotekerLoggedIn } from "../utils/apotekerAuth";
 
 const routes = [
-  { path: "/", redirect: "/pasien" },
+  { path: "/", redirect: "/dispensing" },
+  {
+    path: "/login",
+    name: "login-apoteker",
+    component: LoginApotekerView,
+    meta: { public: true },
+  },
   { path: "/pasien", name: "pasien", component: PasienView },
   { path: "/create/stok-obat", name: "stok-obat", component: CreateStokView },
   { path: "/rekap-stok", name: "rekap-stok", component: RekapView },
@@ -29,4 +37,26 @@ const routes = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to) => {
+  const isPublicRoute = Boolean(to.meta.public);
+  const loggedIn = isApotekerLoggedIn();
+
+  if (!isPublicRoute && !loggedIn) {
+    return {
+      path: "/login",
+      query: {
+        redirect: to.fullPath,
+      },
+    };
+  }
+
+  if (isPublicRoute && loggedIn) {
+    return {
+      path: "/dispensing",
+    };
+  }
+
+  return true;
 });
