@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
+import { getApotekerAuthHeader } from "../utils/apotekerAuth";
+import { apiUrl } from "../utils/api";
 
 const searchQuery = ref("");
 const pasien = ref(null);
@@ -19,7 +21,7 @@ const cariPasien = async () => {
   pasien.value = null;
 
   try {
-    const res = await fetch(`/api/pasien/no_reg/${encodeURIComponent(query)}`);
+    const res = await fetch(apiUrl(`/api/pasien/no_reg/${encodeURIComponent(query)}`));
     const result = await res.json();
 
     if (!result.success) {
@@ -55,7 +57,7 @@ const formatTanggal = (tgl) => {
 // Ambil opsi status dispensing
 onMounted(async () => {
   try {
-    const res = await fetch("/api/status-dispensing");
+    const res = await fetch(apiUrl("/api/status-dispensing"));
     const result = await res.json();
     statusDispensingOptions.value = (result.data || []).map((s) => ({
       value: s.id,
@@ -68,12 +70,14 @@ onMounted(async () => {
 
 // util post status (dipakai per-baris & massal)
 const postStatusDispensing = async (detail) => {
-  const res = await fetch("/api/dispensing", {
+  const res = await fetch(apiUrl("/api/dispensing"), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...getApotekerAuthHeader(),
+    },
     body: JSON.stringify({
       detail_resep_id: detail.id,
-      apoteker_id: 1, // TODO: ganti dengan user login
       status_dispensing_id: Number(detail.selectedStatus),
       dispensingAt: new Date(),
     }),
@@ -96,28 +100,28 @@ const updateStatusDispensing = async (detail) => {
   }
 };
 
-// Update massal
-const updateAllStatus = async () => {
-  const details = (pasien.value?.reseps || [])
-    .flatMap((r) => r.detailReseps || [])
-    .filter((d) => d.selectedStatus);
+// // Update massal
+// const updateAllStatus = async () => {
+//   const details = (pasien.value?.reseps || [])
+//     .flatMap((r) => r.detailReseps || [])
+//     .filter((d) => d.selectedStatus);
 
-  if (!details.length) {
-    alert("Pilih status terlebih dahulu untuk minimal satu obat.");
-    return;
-  }
+//   if (!details.length) {
+//     alert("Pilih status terlebih dahulu untuk minimal satu obat.");
+//     return;
+//   }
 
-  updatingAll.value = true;
-  try {
-    await Promise.all(details.map((d) => postStatusDispensing(d)));
-    alert("Semua status dispensing berhasil diupdate!");
-  } catch (err) {
-    console.error(err);
-    alert("Sebagian/gagal update: " + err.message);
-  } finally {
-    updatingAll.value = false;
-  }
-};
+//   updatingAll.value = true;
+//   try {
+//     await Promise.all(details.map((d) => postStatusDispensing(d)));
+//     alert("Semua status dispensing berhasil diupdate!");
+//   } catch (err) {
+//     console.error(err);
+//     alert("Sebagian/gagal update: " + err.message);
+//   } finally {
+//     updatingAll.value = false;
+//   }
+// };
 
 // Status terbaru
 const getLatestStatus = (detail) => {

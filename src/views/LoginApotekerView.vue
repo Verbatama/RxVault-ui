@@ -11,7 +11,7 @@
           v-model.trim="namaApoteker"
           type="text"
           autocomplete="username"
-          placeholder="Contoh: Andi Saputra"
+          placeholder="Contoh: Masukan Nama"
           :disabled="loading"
         />
       </div>
@@ -41,6 +41,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { isApotekerLoggedIn, saveApotekerSession } from "../utils/apotekerAuth";
+import { apiUrl } from "../utils/api";
 
 const route = useRoute();
 const router = useRouter();
@@ -61,7 +62,7 @@ const login = async () => {
 
     loading.value = true;
 
-    const res = await fetch("/api/apoteker/login", {
+    const res = await fetch(apiUrl("/api/apoteker/login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

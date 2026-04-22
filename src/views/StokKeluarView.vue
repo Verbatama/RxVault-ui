@@ -53,6 +53,7 @@
 import { ref, onMounted, reactive } from "vue";
 import { useRoute } from "vue-router";
 import { getApotekerAuthHeader, getApotekerSession } from "../utils/apotekerAuth";
+import { apiUrl } from "../utils/api";
 
 const route = useRoute();
 
@@ -71,16 +72,9 @@ const selectedProdukObatIdByDetail = reactive({});
 const message = ref("");
 const error = ref("");
 
-const createIdempotencyKey = () => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `idem-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
-
 const fetchRekapStokApotek = async () => {
   try {
-    const res = await fetch("/api/stok/rekap", {
+    const res = await fetch(apiUrl("/api/stok/rekap"), {
       headers: {
         ...getApotekerAuthHeader(),
       },
@@ -146,7 +140,7 @@ const fetchByNoReg = async () => {
 
     await fetchRekapStokApotek();
 
-    const res = await fetch(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`, {
+    const res = await fetch(apiUrl(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`), {
       headers: {
         ...getApotekerAuthHeader(),
       },
@@ -205,11 +199,10 @@ const processStokKeluar = async () => {
       items,
     };
 
-    const res = await fetch("/api/stok-keluar/by-no-reg", {
+    const res = await fetch(apiUrl("/api/stok-keluar/by-no-reg"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-idempotency-key": createIdempotencyKey(),
         ...getApotekerAuthHeader(),
       },
       body: JSON.stringify(payload),

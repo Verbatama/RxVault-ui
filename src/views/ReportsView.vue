@@ -52,6 +52,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { apiUrl } from '../utils/api'
 
 const date = ref(new Date().toISOString().slice(0,10))
 const report = ref([])
@@ -61,7 +62,7 @@ const errorMessage = ref('')
 const fetchReport = async () => {
   try {
     errorMessage.value = ''
-    const res = await fetch(`/api/reports/daily?date=${date.value}`)
+    const res = await fetch(apiUrl(`/api/reports/daily?date=${date.value}`))
     const data = await res.json()
     if (!res.ok || data.success === false) {
       errorMessage.value = data.message || 'Gagal mengambil laporan harian'

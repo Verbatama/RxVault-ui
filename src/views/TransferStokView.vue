@@ -40,6 +40,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
+import { apiUrl } from "../utils/api";
 
 const selectedRekapId = ref("");
 const transferJumlah = ref(0);
@@ -53,7 +54,7 @@ const selectedRekap = computed(() => rekapOptions.value.find((item) => item.key 
 
 const fetchRekapOptions = async () => {
   try {
-    const res = await fetch("/api/stok/rekap");
+    const res = await fetch(apiUrl("/api/stok/rekap"));
     const data = await res.json();
     rekapOptions.value = (data.data || []).map((item) => ({
       ...item,
@@ -71,7 +72,7 @@ const fetchJumlahStok = async () => {
   }
 
   try {
-    const res = await fetch(`/api/stok/jumlah?produk_obat_id=${encodeURIComponent(selectedRekap.value.produk_obat_id)}`);
+    const res = await fetch(apiUrl(`/api/stok/jumlah?produk_obat_id=${encodeURIComponent(selectedRekap.value.produk_obat_id)}`));
     const data = await res.json();
     stokSummary.value = data?.data?.summary || null;
   } catch (err) {
@@ -101,7 +102,7 @@ const submitTransfer = async () => {
       ke_lokasi_nama: targetLocation,
     };
 
-    const res = await fetch("/api/stok/transfer", {
+    const res = await fetch(apiUrl("/api/stok/transfer"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

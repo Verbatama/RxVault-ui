@@ -22,6 +22,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { apiUrl } from '../utils/api'
 
 const obatSearch = ref('')
 const results = ref([])
@@ -36,7 +37,7 @@ const tanggal_kadaluarsa = ref('')
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/obat')
+    const res = await fetch(apiUrl('/api/obat'))
     const data = await res.json()
     allObat.value = data.data || []
   } catch (e) { console.error(e) }
@@ -61,7 +62,7 @@ const submitReceive = async () => {
     ]
   }
   try {
-    const res = await fetch('/api/penerimaan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    const res = await fetch(apiUrl('/api/penerimaan'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     const data = await res.json()
     console.log(data)
     alert('Penerimaan disimpan')

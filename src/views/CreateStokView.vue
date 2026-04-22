@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
+import { apiUrl } from "../utils/api";
 
 const searchQueryObat = ref("");
 const loading = ref(false);
@@ -39,7 +40,7 @@ const applySatuanByBentuk = (bentukObatId) => {
 
 const fetchAllSatuanDosis = async () => {
     try {
-        const res = await fetch('/api/satuan-dosis');
+        const res = await fetch(apiUrl('/api/satuan-dosis'));
         if (!res.ok) {
             throw new Error('Gagal mengambil satuan dosis');
         }
@@ -61,7 +62,7 @@ const fetchSatuanDosis = async (bentukObatId) => {
 
         loadingSatuanDosis.value = true;
         errorSatuanDosis.value = "";
-        const res = await fetch(`/api/satuan-dosis?bentuk_obat_id=${encodeURIComponent(bentukObatId)}`);
+        const res = await fetch(apiUrl(`/api/satuan-dosis?bentuk_obat_id=${encodeURIComponent(bentukObatId)}`));
         if (!res.ok) {
             throw new Error("Gagal mengambil satuan dosis");
         }
@@ -89,7 +90,7 @@ onMounted(async () => {
     await fetchAllSatuanDosis();
 
     try {
-        const res = await fetch("/api/bentuk-obat");
+        const res = await fetch(apiUrl("/api/bentuk-obat"));
         const data = await res.json();
         bentukOptions.value = data.data || [];
     } catch (err) {
@@ -97,7 +98,7 @@ onMounted(async () => {
     }
     // Ambil semua obat untuk dropdown awal
     try {
-        const resObat = await fetch("/api/obat");
+        const resObat = await fetch(apiUrl("/api/obat"));
         const dataObat = await resObat.json();
         allObat.value = dataObat.data || [];
     } catch (err) {
@@ -134,7 +135,7 @@ const handleSearch = (newValue) => {
         try {
             loading.value = true;
             error.value = "";
-            const res = await fetch(`/api/obat/search?q=${encodeURIComponent(newValue)}`);
+            const res = await fetch(apiUrl(`/api/obat/search?q=${encodeURIComponent(newValue)}`));
             const data = await res.json();
             result.value = data.data || [];
         } catch (err) {
@@ -196,7 +197,7 @@ const submitForm = async () => {
     };
 
     try {
-        const res = await fetch('/api/stok/', {
+        const res = await fetch(apiUrl('/api/stok/'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -231,7 +232,7 @@ const submitForm = async () => {
     <div class="create-stok-view">
 
         <div class="form-container">
-            <h2>Form Pengadaan Baru</h2>
+            <h2>Pengadaan Baru</h2>
             <form @submit.prevent="submitForm">
                 <div class="form-group">
                     <div class="search-container">

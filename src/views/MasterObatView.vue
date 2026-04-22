@@ -35,6 +35,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { apiUrl } from '../utils/api'
 
 const obats = ref([])
 const golongans = ref([])
@@ -44,7 +45,7 @@ const errorMessage = ref('')
 
 const fetchObats = async () => {
   try {
-    const res = await fetch('/api/obat')
+    const res = await fetch(apiUrl('/api/obat'))
     const data = await res.json()
     obats.value = data.data || []
   } catch (e) {
@@ -54,7 +55,7 @@ const fetchObats = async () => {
 
 const fetchGolongan = async () => {
   try {
-    const res = await fetch('/api/golongan-obat')
+    const res = await fetch(apiUrl('/api/golongan-obat'))
     const data = await res.json()
     golongans.value = data.data || []
   } catch (e) {
@@ -75,7 +76,7 @@ const createObat = async () => {
     }
 
     const payload = { nama_obat: nama_obat.value, golongan_obat_id: selectedGolongan.value }
-    const res = await fetch('/api/obat', {
+    const res = await fetch(apiUrl('/api/obat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

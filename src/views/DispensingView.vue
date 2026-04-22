@@ -87,6 +87,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { getApotekerAuthHeader, getApotekerSession } from "../utils/apotekerAuth";
+import { apiUrl } from "../utils/api";
 
 const router = useRouter();
 const noRegistrasi = ref("");
@@ -98,18 +99,11 @@ const error = ref("");
 const queueRows = ref([]);
 const queueSearch = ref("");
 
-const createIdempotencyKey = () => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `idem-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
-
 const fetchByNoReg = async () => {
   try {
     error.value = "";
     message.value = "";
-    const res = await fetch(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`, {
+    const res = await fetch(apiUrl(`/api/dispensing/by-no-reg/${encodeURIComponent(noRegistrasi.value)}`), {
       headers: {
         ...getApotekerAuthHeader(),
       },
@@ -146,11 +140,10 @@ const processDispensing = async () => {
       no_registrasi: noRegistrasi.value,
     };
 
-    const res = await fetch("/api/dispensing/process-by-no-reg", {
+    const res = await fetch(apiUrl("/api/dispensing/process-by-no-reg"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-idempotency-key": createIdempotencyKey(),
         ...getApotekerAuthHeader(),
       },
       body: JSON.stringify(payload),
@@ -173,7 +166,7 @@ const processDispensing = async () => {
 const fetchQueue = async () => {
   try {
     const query = queueSearch.value ? `?q=${encodeURIComponent(queueSearch.value)}` : "";
-    const res = await fetch(`/api/dispensing/queue${query}`, {
+    const res = await fetch(apiUrl(`/api/dispensing/queue${query}`), {
       headers: {
         ...getApotekerAuthHeader(),
       },

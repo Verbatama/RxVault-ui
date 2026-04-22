@@ -15,7 +15,7 @@ function toggleMenu(menu) {
           <font-awesome-icon :icon="openMenu === 'far' ? 'chevron-down' : 'chevron-right'" class="icon" />
         </button>
         <ul v-if="openMenu === 'far'" class="submenu">
-          <li><router-link to="/pasien">Pasien</router-link></li>
+          <li><router-link to="/pasien">Resep Pasien</router-link></li>
           <li><router-link to="/master/obat">Master Obat</router-link></li>
           <li><router-link to="/master/golongan">Master Golongan</router-link></li>
           <li><router-link to="/dispensing">Dispensing</router-link></li>
@@ -31,8 +31,8 @@ function toggleMenu(menu) {
           <li><router-link to="/create/stok-obat">Pengadaan Baru</router-link></li>
           <li><router-link to="/rekap-stok">Rekap Stok Obat</router-link></li>
           <li><router-link to="/stok-transfer">Transfer Stok</router-link></li>
-          <li><router-link to="/stok-keluar">Stok Keluar</router-link></li>
-          <li><router-link to="/stock-log">Stock Log</router-link></li>
+          <li><router-link to="/stok-keluar">Stok Keluar Pasien</router-link></li>
+          <li><router-link to="/stock-log">History</router-link></li>
         </ul>
       </li>
 

@@ -59,6 +59,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { apiUrl } from '../utils/api'
 
 const golongans = ref([])
 const nama_golongan_obat = ref('')
@@ -93,7 +94,7 @@ const goToFirstPage = () => {
 
 const fetchGolongan = async () => {
   try {
-    const res = await fetch('/api/golongan-obat')
+    const res = await fetch(apiUrl('/api/golongan-obat'))
     const data = await res.json()
     golongans.value = data.data || []
     if (currentPage.value > totalPages.value) {
@@ -109,7 +110,7 @@ onMounted(fetchGolongan)
 const createGolongan = async () => {
   try {
     errorMessage.value = ''
-    const res = await fetch('/api/golongan-obat', {
+    const res = await fetch(apiUrl('/api/golongan-obat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nama_golongan_obat: nama_golongan_obat.value })

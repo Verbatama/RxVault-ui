@@ -53,6 +53,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { apiUrl } from '../utils/api'
 
 const logs = ref([])
 const selectedYear = ref('')
@@ -91,7 +92,7 @@ const fetchLog = async () => {
     if (selectedDay.value) params.set('day', selectedDay.value)
     const query = params.toString()
 
-    const res = await fetch(`/api/stock-log${query ? `?${query}` : ''}`)
+    const res = await fetch(apiUrl(`/api/stock-log${query ? `?${query}` : ''}`))
     const data = await res.json()
     logs.value = data.data || []
   } catch (e) { console.error(e) }
